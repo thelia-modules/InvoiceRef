@@ -28,6 +28,6 @@ class InvoiceRef extends BaseModule
 
     public function postActivation(ConnectionInterface $con = null)
     {
-        ConfigQuery::write('invoiceRef', 1, true, true);
+        ConfigQuery::write('invoiceRef', ConfigQuery::read('invoiceRef', 1000), true, true);
     }
 }
