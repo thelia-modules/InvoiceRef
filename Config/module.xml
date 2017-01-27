@@ -2,12 +2,12 @@
 <module>
     <fullnamespace>InvoiceRef\InvoiceRef</fullnamespace>
     <descriptive locale="en_US">
-        <title>Manage invoive ref</title>
+        <title>Manage invoice ref</title>
     </descriptive>
     <descriptive locale="fr_FR">
         <title>Gestion des numéros de facture</title>
     </descriptive>
-    <version>0.1</version>
+    <version>0.2</version>
     <author>
         <name>Manuel Raynaud</name>
         <email>manu@thelia.net</email>

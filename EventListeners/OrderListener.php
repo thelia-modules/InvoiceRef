@@ -11,6 +11,7 @@
 /*************************************************************************************/
 
 namespace InvoiceRef\EventListeners;
+
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Thelia\Core\Event\Order\OrderEvent;
 use Thelia\Core\Event\TheliaEvents;
@@ -29,20 +30,23 @@ class OrderListener implements EventSubscriberInterface
     {
         $order = $event->getOrder();
 
-        if ($order->isPaid() && null === $order->getInvoiceRef()) {
-            $invoiceRef = ConfigQuery::create()
-                ->findOneByName('invoiceRef');
+        if ($order->isPaid()) {
+            // order paid 'invoice_ref' is the order's 'ref' or null in older Thelia version
+            if (null === $order->getInvoiceRef() || $order->getRef() == $order->getInvoiceRef()) {
+                $invoiceRef = ConfigQuery::read('invoiceRef');
 
-            if (null === $invoiceRef) {
-                throw new \RuntimeException("you must set an invoice ref in your admin panel");
+                if (null === $invoiceRef) {
+                    throw new \RuntimeException("you must set an invoice ref in your admin panel");
+                }
+
+                $value = $invoiceRef->getValue();
+
+                $order->setInvoiceRef($value)
+                    ->save()
+                ;
+
+                ConfigQuery::write('invoiceRef', ++$value);
             }
-            $value = $invoiceRef->getValue();
-            $order->setInvoiceRef($value)
-                ->save()
-            ;
-
-            $invoiceRef->setValue(++$value)
-                ->save();
         }
     }
 
