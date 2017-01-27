@@ -33,8 +33,7 @@ class OrderListener implements EventSubscriberInterface
         if ($order->isPaid()) {
             // order paid 'invoice_ref' is the order's 'ref' or null in older Thelia version
             if (null === $order->getInvoiceRef() || $order->getRef() == $order->getInvoiceRef()) {
-                $invoiceRef = ConfigQuery::create()
-                    ->findOneByName('invoiceRef');
+                $invoiceRef = ConfigQuery::read('invoiceRef');
 
                 if (null === $invoiceRef) {
                     throw new \RuntimeException("you must set an invoice ref in your admin panel");
@@ -46,8 +45,7 @@ class OrderListener implements EventSubscriberInterface
                     ->save()
                 ;
 
-                $invoiceRef->setValue(++$value)
-                    ->save();
+                ConfigQuery::write('invoiceRef', ++$value);
             }
         }
     }
