@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<module>
+<module xmlns="http://thelia.net/schema/dic/module"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://thelia.net/schema/dic/module http://thelia.net/schema/dic/module/module-2_1.xsd">
     <fullnamespace>InvoiceRef\InvoiceRef</fullnamespace>
     <descriptive locale="en_US">
         <title>Manage invoive ref</title>
@@ -7,12 +9,16 @@
     <descriptive locale="fr_FR">
         <title>Gestion des numéros de facture</title>
     </descriptive>
-    <version>0.1</version>
+    <languages>
+        <language>en_US</language>
+        <language>fr_FR</language>
+    </languages>
+    <version>1.0.0</version>
     <author>
         <name>Manuel Raynaud</name>
         <email>manu@thelia.net</email>
     </author>
     <type>classic</type>
-    <thelia>2.0.0</thelia>
-    <stability>alpha</stability>
+    <thelia>2.1.0</thelia>
+    <stability>prod</stability>
 </module>
