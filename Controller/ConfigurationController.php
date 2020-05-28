@@ -11,6 +11,7 @@
 /*************************************************************************************/
 
 namespace InvoiceRef\Controller;
+
 use InvoiceRef\Form\ConfigurationForm;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Thelia\Controller\Admin\BaseAdminController;
@@ -19,7 +20,6 @@ use Thelia\Core\Security\Resource\AdminResources;
 use Thelia\Form\Exception\FormValidationException;
 use Thelia\Model\ConfigQuery;
 use Thelia\Tools\URL;
-
 
 /**
  * Class ConfigurationController
@@ -36,15 +36,16 @@ class ConfigurationController extends BaseAdminController
         }
 
         $form = new ConfigurationForm($this->getRequest());
-        $response = null;
-        $error_msg = null;
+
+        $response = $error_msg = $e = null;
+
         try {
             $configForm = $this->validateForm($form);
 
             ConfigQuery::write('invoiceRef', $configForm->get('invoice')->getData(), true, true);
 
             // Redirect to the success URL,
-            if ($this->getRequest()->get('save_mode') == 'stay') {
+            if ($this->getRequest()->get('save_mode') === 'stay') {
                 // If we have to stay on the same page, redisplay the configuration page/
                 $route = '/admin/module/InvoiceRef';
             } else {
@@ -57,6 +58,7 @@ class ConfigurationController extends BaseAdminController
         } catch (\Exception $e) {
             $error_msg = $e->getMessage();
         }
+
         if (null !== $error_msg) {
             $this->setupFormErrorContext(
                 'InvoiceRef Configuration',
@@ -71,4 +73,4 @@ class ConfigurationController extends BaseAdminController
         }
         return $response;
     }
-} 
+}
