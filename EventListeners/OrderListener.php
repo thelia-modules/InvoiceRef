@@ -11,11 +11,13 @@
 /*************************************************************************************/
 
 namespace InvoiceRef\EventListeners;
+
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\Lock\Factory;
+use Symfony\Component\Lock\Store\FlockStore;
 use Thelia\Core\Event\Order\OrderEvent;
 use Thelia\Core\Event\TheliaEvents;
 use Thelia\Model\ConfigQuery;
-
 
 /**
  * Class OrderListener
@@ -24,25 +26,42 @@ use Thelia\Model\ConfigQuery;
  */
 class OrderListener implements EventSubscriberInterface
 {
-
+    /**
+     * @param OrderEvent $event
+     * @throws \Propel\Runtime\Exception\PropelException
+     */
     public function implementInvoice(OrderEvent $event)
     {
         $order = $event->getOrder();
 
         if ($order->isPaid() && null === $order->getInvoiceRef()) {
-            $invoiceRef = ConfigQuery::create()
-                ->findOneByName('invoiceRef');
+            // Protect genration against concurrent executions
+            $flockFactory = new Factory(new FlockStore());
 
-            if (null === $invoiceRef) {
-                throw new \RuntimeException("you must set an invoice ref in your admin panel");
+            $lock = $flockFactory->createLock('invoice-ref-generation');
+
+            // Acquire a blocking lock
+            $lock->acquire(true);
+
+            try {
+                $invoiceRef = ConfigQuery::create()
+                    ->findOneByName('invoiceRef');
+
+                if (null === $invoiceRef) {
+                    throw new \RuntimeException("you must set an invoice ref in your admin panel");
+                }
+
+                $value = $invoiceRef->getValue();
+                $order->setInvoiceRef($value)
+                    ->save();
+
+                $invoiceRef
+                    ->setValue(++$value)
+                    ->save();
+            } finally {
+                // Always release lock !
+                $lock->release();
             }
-            $value = $invoiceRef->getValue();
-            $order->setInvoiceRef($value)
-                ->save()
-            ;
-
-            $invoiceRef->setValue(++$value)
-                ->save();
         }
     }
 
