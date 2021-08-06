@@ -14,6 +14,7 @@ namespace InvoiceRef;
 
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\Connection\ConnectionInterface;
+use Symfony\Component\DependencyInjection\Loader\Configurator\ServicesConfigurator;
 use Thelia\Model\ConfigQuery;
 use Thelia\Model\OrderQuery;
 use Thelia\Module\BaseModule;
@@ -22,7 +23,7 @@ class InvoiceRef extends BaseModule
 {
     const DOMAIN_NAME = "invoiceref";
 
-    public function postActivation(ConnectionInterface $con = null)
+    public function postActivation(ConnectionInterface $con = null): void
     {
         if (null === ConfigQuery::read('invoiceRef', null)) {
             if (null !== $lastOderPaid = OrderQuery::create()
@@ -37,5 +38,13 @@ class InvoiceRef extends BaseModule
                 ConfigQuery::write('invoiceRef', 1, true, true);
             }
         }
+    }
+
+    public static function configureServices(ServicesConfigurator $servicesConfigurator): void
+    {
+        $servicesConfigurator->load(self::getModuleCode().'\\', __DIR__)
+            ->exclude([THELIA_MODULE_DIR . ucfirst(self::getModuleCode()). "/I18n/*"])
+            ->autowire(true)
+            ->autoconfigure(true);
     }
 }

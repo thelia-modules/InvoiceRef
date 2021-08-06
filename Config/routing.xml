@@ -28,8 +28,8 @@
     </route>
     -->
 
-    <route id="invoiceRef.configuration" path="/admin/module/InvoiceRef/configure" methods="post">
+    <!--<route id="invoiceRef.configuration" path="/admin/module/InvoiceRef/configure" methods="post">
         <default key="_controller">InvoiceRef\Controller\ConfigurationController::configureAction</default>
-    </route>
+    </route>-->
 
 </routes>
