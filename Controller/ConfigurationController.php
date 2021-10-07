@@ -35,7 +35,7 @@ class ConfigurationController extends BaseAdminController
             return $response;
         }
 
-        $form = new ConfigurationForm($this->getRequest());
+        $form = $this->createForm(ConfigurationForm::getName());
 
         $response = $error_msg = $e = null;
 

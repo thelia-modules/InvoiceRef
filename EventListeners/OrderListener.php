@@ -14,7 +14,9 @@ namespace InvoiceRef\EventListeners;
 
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Lock\Factory;
+use Symfony\Component\Lock\LockFactory;
 use Symfony\Component\Lock\Store\FlockStore;
+use Symfony\Component\Lock\Store\SemaphoreStore;
 use Thelia\Core\Event\Order\OrderEvent;
 use Thelia\Core\Event\TheliaEvents;
 use Thelia\Model\ConfigQuery;
@@ -35,8 +37,8 @@ class OrderListener implements EventSubscriberInterface
         $order = $event->getOrder();
 
         if ($order->isPaid() && null === $order->getInvoiceRef()) {
-            // Protect genration against concurrent executions
-            $flockFactory = new Factory(new FlockStore());
+            $store = new SemaphoreStore();
+            $flockFactory = new LockFactory($store);
 
             $lock = $flockFactory->createLock('invoice-ref-generation');
 

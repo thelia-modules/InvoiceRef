@@ -37,7 +37,7 @@
 
                                             {form_error form=$form field="invoice"}
                                                 <br />
-                                                <span class="error">{$message}</span>
+                                                <span class="error">{$message|default:null}</span>
                                             {/form_error}
                                             <input type="text" {if $required}aria-required="true" required{/if} placeholder="{$label}" id="{$label_attr.for}" name="{$name}" value="{$value}" class="form-control" />
                                         </label>

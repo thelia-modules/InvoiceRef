@@ -23,9 +23,9 @@
         -->
     </commands>
 
-    <services>
+    <!--<services>
         <service id="invoiceRef.listener" class="InvoiceRef\EventListeners\OrderListener">
             <tag name="kernel.event_subscriber"/>
         </service>
-    </services>
+    </services>-->
 </config>
