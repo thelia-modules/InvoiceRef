@@ -18,6 +18,7 @@ use Symfony\Component\Lock\Store\FlockStore;
 use Thelia\Core\Event\Order\OrderEvent;
 use Thelia\Core\Event\TheliaEvents;
 use Thelia\Model\ConfigQuery;
+use Thelia\Model\OrderQuery;
 
 /**
  * Class OrderListener
@@ -52,6 +53,10 @@ class OrderListener implements EventSubscriberInterface
                 }
 
                 $value = $invoiceRef->getValue();
+                if (null !== OrderQuery::create()->filterByInvoiceRef($value)->findOne()){
+                    $value++;
+                }
+
                 $order->setInvoiceRef($value)
                     ->save();
 
