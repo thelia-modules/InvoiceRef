@@ -5,12 +5,10 @@
                 {intl d='invoiceref.ai' l="Invoice ref Configuration"}
             </div>
         </div>
-
         <div class="form-container">
             <div class="row">
                 <div class="col-md-12">
                     {form name="invoiceref_configuration"}
-
                         <form action="{url path="/admin/module/InvoiceRef/configure"}" method="post">
                             {form_hidden_fields form=$form}
 
@@ -30,23 +28,13 @@
 
                             <div class="row">
                                 <div class="col-md-4">
-                                    {form_field form=$form field="invoice"}
-                                    <div class="form-group {if $error}has-error{/if}">
-                                        <label for="{$label_attr.for}" class="control-label">
-                                            {$label} {if $required} <span class="required">*</span>{/if}
-
-                                            {form_error form=$form field="invoice"}
-                                                <br />
-                                                <span class="error">{$message|default:null}</span>
-                                            {/form_error}
-                                            <input type="text" {if $required}aria-required="true" required{/if} placeholder="{$label}" id="{$label_attr.for}" name="{$name}" value="{$value}" class="form-control" />
-                                        </label>
-                                        {/form_field}
-                                    </div>
+                                    {render_form_field field="invoice"}
                                 </div>
+                            </div>
                         </form>
                     {/form}
                 </div>
             </div>
         </div>
     </div>
+</div>

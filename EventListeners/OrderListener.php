@@ -1,56 +1,68 @@
 <?php
-/*************************************************************************************/
-/*      This file is part of the Thelia package.                                     */
-/*                                                                                   */
-/*      Copyright (c) OpenStudio                                                     */
-/*      email : dev@thelia.net                                                       */
-/*      web : http://www.thelia.net                                                  */
-/*                                                                                   */
-/*      For the full copyright and license information, please view the LICENSE.txt  */
-/*      file that was distributed with this source code.                             */
-/*************************************************************************************/
+
+/*
+ * This file is part of the Thelia package.
+ * http://www.thelia.net
+ *
+ * (c) OpenStudio <info@thelia.net>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+/*      Copyright (c) OpenStudio */
+/*      email : dev@thelia.net */
+/*      web : http://www.thelia.net */
+
+/*      For the full copyright and license information, please view the LICENSE.txt */
+/*      file that was distributed with this source code. */
 
 namespace InvoiceRef\EventListeners;
 
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\Lock\Factory;
 use Symfony\Component\Lock\LockFactory;
 use Symfony\Component\Lock\Store\FlockStore;
-use Symfony\Component\Lock\Store\SemaphoreStore;
 use Thelia\Core\Event\Order\OrderEvent;
 use Thelia\Core\Event\TheliaEvents;
+use Thelia\Log\Tlog;
 use Thelia\Model\ConfigQuery;
 
 /**
- * Class OrderListener
- * @package InvoiceRef\EventListeners
+ * Class OrderListener.
+ *
  * @author manuel raynaud <mraynaud@openstudio.fr>
  */
 class OrderListener implements EventSubscriberInterface
 {
     /**
-     * @param OrderEvent $event
      * @throws \Propel\Runtime\Exception\PropelException
      */
-    public function implementInvoice(OrderEvent $event)
+    public function implementInvoice(OrderEvent $event): void
     {
         $order = $event->getOrder();
 
         if ($order->isPaid() && null === $order->getInvoiceRef()) {
-            $store = new SemaphoreStore();
-            $flockFactory = new LockFactory($store);
+            $lock = null;
 
-            $lock = $flockFactory->createLock('invoice-ref-generation');
+            // Try to acquire lock, being fault-tolerant if it can't be acquired
+            // for whatever reason.
+            try {
+                $flockFactory = new LockFactory(new FlockStore());
 
-            // Acquire a blocking lock
-            $lock->acquire(true);
+                $lock = $flockFactory->createLock('invoice-ref-generation');
+
+                // Acquire a blocking lock
+                $lock->acquire(true);
+            } catch (\Exception $ex) {
+                Tlog::getInstance()->error('Failed to acquire lock : '.$ex->getMessage());
+            }
 
             try {
                 $invoiceRef = ConfigQuery::create()
                     ->findOneByName('invoiceRef');
 
                 if (null === $invoiceRef) {
-                    throw new \RuntimeException("you must set an invoice ref in your admin panel");
+                    throw new \RuntimeException('you must set an invoice ref in your admin panel');
                 }
 
                 $value = $invoiceRef->getValue();
@@ -62,7 +74,7 @@ class OrderListener implements EventSubscriberInterface
                     ->save();
             } finally {
                 // Always release lock !
-                $lock->release();
+                $lock?->release();
             }
         }
     }
@@ -90,7 +102,7 @@ class OrderListener implements EventSubscriberInterface
     public static function getSubscribedEvents()
     {
         return [
-            TheliaEvents::ORDER_UPDATE_STATUS => ['implementInvoice', 100]
+            TheliaEvents::ORDER_UPDATE_STATUS => ['implementInvoice', 100],
         ];
     }
 }

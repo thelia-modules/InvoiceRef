@@ -1,5 +1,5 @@
 <?php
 
 return array(
-    'invoice ref' => 'Numéro de facture',
+    'invoice ref' => 'Prochain numéro de facture',
 );

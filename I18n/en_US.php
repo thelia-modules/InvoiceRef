@@ -1,5 +1,5 @@
 <?php
 
 return array(
-    'invoice ref' => 'invoice ref',
+    'invoice ref' => 'Nex invoice reference number',
 );

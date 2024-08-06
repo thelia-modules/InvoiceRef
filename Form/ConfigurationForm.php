@@ -1,14 +1,14 @@
 <?php
-/*************************************************************************************/
-/*      This file is part of the Thelia package.                                     */
-/*                                                                                   */
-/*      Copyright (c) OpenStudio                                                     */
-/*      email : dev@thelia.net                                                       */
-/*      web : http://www.thelia.net                                                  */
-/*                                                                                   */
-/*      For the full copyright and license information, please view the LICENSE.txt  */
-/*      file that was distributed with this source code.                             */
-/*************************************************************************************/
+
+/*
+ * This file is part of the Thelia package.
+ * http://www.thelia.net
+ *
+ * (c) OpenStudio <info@thelia.net>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
 namespace InvoiceRef\Form;
 
@@ -20,17 +20,15 @@ use Thelia\Form\BaseForm;
 use Thelia\Model\ConfigQuery;
 
 /**
- * Class ConfigurationForm
- * @package InvoiceRef\Form
+ * Class ConfigurationForm.
+ *
  * @author manuel raynaud <mraynaud@openstudio.fr>
  */
 class ConfigurationForm extends BaseForm
 {
-
     /**
-     *
      * in this function you add all the fields you need for your Form.
-     * Form this you have to call add method on $this->formBuilder attribute :
+     * Form this you have to call add method on $this->formBuilder attribute :.
      *
      * $this->formBuilder->add("name", "text")
      *   ->add("email", "email", array(
@@ -52,13 +50,13 @@ class ConfigurationForm extends BaseForm
         $this->formBuilder
             ->add('invoice', TextType::class, [
                 'constraints' => [
-                    new NotBlank()
+                    new NotBlank(),
                 ],
                 'label' => Translator::getInstance()->trans('invoice ref', [], InvoiceRef::DOMAIN_NAME),
                 'label_attr' => [
-                    'for' => 'invoice-ref'
+                    'for' => 'invoice-ref',
                 ],
-                'data' => ConfigQuery::read('invoiceRef', 0)
+                'data' => ConfigQuery::read('invoiceRef', 0),
             ]);
     }
 
@@ -67,6 +65,6 @@ class ConfigurationForm extends BaseForm
      */
     public static function getName()
     {
-        return 'invoiceref_config';
+        return 'invoiceref_configuration';
     }
 }
