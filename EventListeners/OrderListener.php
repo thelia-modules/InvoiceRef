@@ -19,6 +19,7 @@
 
 namespace InvoiceRef\EventListeners;
 
+use Propel\Runtime\Exception\PropelException;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Lock\LockFactory;
 use Symfony\Component\Lock\Store\FlockStore;
@@ -35,7 +36,7 @@ use Thelia\Model\ConfigQuery;
 class OrderListener implements EventSubscriberInterface
 {
     /**
-     * @throws \Propel\Runtime\Exception\PropelException
+     * @throws PropelException
      */
     public function implementInvoice(OrderEvent $event): void
     {
@@ -99,7 +100,7 @@ class OrderListener implements EventSubscriberInterface
      *
      * @api
      */
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             TheliaEvents::ORDER_UPDATE_STATUS => ['implementInvoice', 100],

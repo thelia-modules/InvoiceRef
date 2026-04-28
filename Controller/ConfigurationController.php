@@ -14,30 +14,30 @@ namespace InvoiceRef\Controller;
 
 use InvoiceRef\Form\ConfigurationForm;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Attribute\Route;
 use Thelia\Controller\Admin\BaseAdminController;
 use Thelia\Core\Security\AccessManager;
 use Thelia\Core\Security\Resource\AdminResources;
 use Thelia\Form\Exception\FormValidationException;
 use Thelia\Model\ConfigQuery;
-use Thelia\Tools\URL;
 
 /**
  * Class ConfigurationController
  * @package InvoiceRef\Controller
  * @author manuel raynaud <mraynaud@openstudio.fr>
  */
+#[Route('/admin/module/InvoiceRef', name: 'invoice_ref_configuration')]
 class ConfigurationController extends BaseAdminController
 {
-
-    public function configureAction()
+    #[Route('/configure', name: '_configure', methods: ['POST'])]
+    public function configureAction(): RedirectResponse|Response|null
     {
         if (null !== $response = $this->checkAuth(AdminResources::MODULE, 'invoiceref', AccessManager::UPDATE)) {
             return $response;
         }
 
         $form = $this->createForm(ConfigurationForm::getName());
-
-        $response = $error_msg = $e = null;
 
         try {
             $configForm = $this->validateForm($form);
@@ -52,25 +52,24 @@ class ConfigurationController extends BaseAdminController
                 // If we have to close the page, go back to the module back-office page.
                 $route = '/admin/modules';
             }
-            $response = RedirectResponse::create(URL::getInstance()->absoluteUrl($route));
+
+            return $this->generateRedirect($route);
         } catch (FormValidationException $e) {
             $error_msg = $this->createStandardFormValidationErrorMessage($e);
         } catch (\Exception $e) {
             $error_msg = $e->getMessage();
         }
 
-        if (null !== $error_msg) {
-            $this->setupFormErrorContext(
-                'InvoiceRef Configuration',
-                $error_msg,
-                $form,
-                $e
-            );
-            $response = $this->render(
-                'module-configure',
-                ['module_code' => 'InvoiceRef']
-            );
-        }
-        return $response;
+        $this->setupFormErrorContext(
+            'InvoiceRef Configuration',
+            $error_msg,
+            $form,
+            $e
+        );
+
+        return $this->render(
+            'module-configure',
+            ['module_code' => 'InvoiceRef']
+        );
     }
 }

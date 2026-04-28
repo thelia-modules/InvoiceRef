@@ -43,9 +43,9 @@ class ConfigurationForm extends BaseForm
      *   )
      *   ->add('age', 'integer');
      *
-     * @return null
+     * @return void
      */
-    protected function buildForm()
+    protected function buildForm(): void
     {
         $this->formBuilder
             ->add('invoice', TextType::class, [
@@ -63,7 +63,7 @@ class ConfigurationForm extends BaseForm
     /**
      * @return string the name of you form. This name must be unique
      */
-    public static function getName()
+    public static function getName(): string
     {
         return 'invoiceref_configuration';
     }
