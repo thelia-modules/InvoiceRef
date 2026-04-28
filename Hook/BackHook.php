@@ -21,4 +21,11 @@ class BackHook extends BaseHook
     {
         $event->add($this->render('module_configuration.html'));
     }
+
+    public static function getSubscribedEvents(): array
+    {
+        return [
+            'module.configuration' => [ 'method' => 'back', 'onModuleConfiguration']
+        ];
+    }
 }
