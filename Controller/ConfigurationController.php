@@ -1,14 +1,14 @@
 <?php
-/*************************************************************************************/
-/*      This file is part of the Thelia package.                                     */
-/*                                                                                   */
-/*      Copyright (c) OpenStudio                                                     */
-/*      email : dev@thelia.net                                                       */
-/*      web : http://www.thelia.net                                                  */
-/*                                                                                   */
-/*      For the full copyright and license information, please view the LICENSE.txt  */
-/*      file that was distributed with this source code.                             */
-/*************************************************************************************/
+
+/*
+ * This file is part of the Thelia package.
+ * http://www.thelia.net
+ *
+ * (c) OpenStudio <info@thelia.net>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
 namespace InvoiceRef\Controller;
 
@@ -24,8 +24,9 @@ use Thelia\Model\ConfigQuery;
 
 /**
  * Class ConfigurationController
+ *
  * @package InvoiceRef\Controller
- * @author manuel raynaud <mraynaud@openstudio.fr>
+ * @author  manuel raynaud <mraynaud@openstudio.fr>
  */
 #[Route('/admin/module/InvoiceRef', name: 'invoice_ref_configuration')]
 class ConfigurationController extends BaseAdminController
@@ -44,16 +45,14 @@ class ConfigurationController extends BaseAdminController
 
             ConfigQuery::write('invoiceRef', $configForm->get('invoice')->getData(), true, true);
 
-            // Redirect to the success URL,
-            if ($this->getRequest()->get('save_mode') === 'stay') {
-                // If we have to stay on the same page, redisplay the configuration page/
-                $route = '/admin/module/InvoiceRef';
-            } else {
-                // If we have to close the page, go back to the module back-office page.
-                $route = '/admin/modules';
+            $request = $this->getRequest();
+            $saveMode = $request->request->get('save_mode') ?? $request->query->get('save_mode');
+
+            if ($saveMode === 'stay') {
+                return $this->generateRedirectFromRoute('admin.module.configure', [], ['module_code' => 'InvoiceRef']);
             }
 
-            return $this->generateRedirect($route);
+            return $this->generateRedirectFromRoute('admin.module');
         } catch (FormValidationException $e) {
             $error_msg = $this->createStandardFormValidationErrorMessage($e);
         } catch (\Exception $e) {

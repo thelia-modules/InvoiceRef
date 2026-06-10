@@ -1,0 +1,40 @@
+{# InvoiceRef module configuration fragment — no extends, hook fragment only #}
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">{{ 'Invoice ref Configuration'|trans({}, 'invoiceref.ai') }}</h5>
+    </div>
+    <div class="card-body">
+        <form action="{{ path('invoice_ref_configuration_configure') }}" method="post">
+            <input type="hidden" name="{{ form.vars.full_name }}[_token]" value="{{ form._token.vars.value }}">
+
+            {% if form.vars.errors|length %}
+                <div class="alert alert-danger">
+                    {{ form_errors(form) }}
+                </div>
+            {% endif %}
+
+            <div class="mb-3">
+                {{ form_label(form.invoice) }}
+                {{ form_widget(form.invoice, {attr: {class: 'form-control' ~ (form.invoice.vars.errors|length ? ' is-invalid' : ''), id: 'invoice-ref'}}) }}
+                {{ form_errors(form.invoice) }}
+            </div>
+
+            {% do form.invoice.setRendered %}
+
+            <div class="d-flex gap-2">
+                <button type="submit" name="save_mode" value="close" class="btn btn-primary">
+                    <i class="bi bi-save"></i>
+                    {{ 'Save'|trans }}
+                </button>
+                <button type="submit" name="save_mode" value="stay" class="btn btn-secondary">
+                    {{ 'Save & Stay'|trans }}
+                </button>
+                <a href="{{ path('admin.module') }}" class="btn btn-secondary">
+                    {{ 'Cancel'|trans }}
+                </a>
+            </div>
+
+            {{ form_rest(form) }}
+        </form>
+    </div>
+</div>
