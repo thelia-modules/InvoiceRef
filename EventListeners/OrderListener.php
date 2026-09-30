@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Thelia package.
  * http://www.thelia.net
@@ -10,100 +12,61 @@
  * file that was distributed with this source code.
  */
 
-/*      Copyright (c) OpenStudio */
-/*      email : dev@thelia.net */
-/*      web : http://www.thelia.net */
-
-/*      For the full copyright and license information, please view the LICENSE.txt */
-/*      file that was distributed with this source code. */
-
 namespace InvoiceRef\EventListeners;
 
-use Propel\Runtime\Exception\PropelException;
+use InvoiceRef\Service\InvoiceRefSequence;
+use InvoiceRef\Service\NumberedStatuses;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\Lock\LockFactory;
-use Symfony\Component\Lock\Store\FlockStore;
 use Thelia\Core\Event\Order\OrderEvent;
 use Thelia\Core\Event\TheliaEvents;
-use Thelia\Log\Tlog;
-use Thelia\Model\ConfigQuery;
 
 /**
- * Class OrderListener.
+ * Gives an order its invoice number when it reaches one of the numbered statuses ({@see NumberedStatuses}), once.
  *
- * @author manuel raynaud <mraynaud@openstudio.fr>
+ * Listens after `Thelia\Action\Order::updateStatus()` (priority 128), which has saved the new status. That save is
+ * committed only if no caller wrapped the event in a transaction of its own (the order API processor does): the
+ * numbering then runs inside that transaction and must never make it fail ({@see InvoiceRefSequence::assignTo()}).
  */
-class OrderListener implements EventSubscriberInterface
+final readonly class OrderListener implements EventSubscriberInterface
 {
-    /**
-     * @throws PropelException
-     */
-    public function implementInvoice(OrderEvent $event): void
-    {
-        $order = $event->getOrder();
-
-        if ($order->isPaid() && null === $order->getInvoiceRef()) {
-            $lock = null;
-
-            // Try to acquire lock, being fault-tolerant if it can't be acquired
-            // for whatever reason.
-            try {
-                $flockFactory = new LockFactory(new FlockStore());
-
-                $lock = $flockFactory->createLock('invoice-ref-generation');
-
-                // Acquire a blocking lock
-                $lock->acquire(true);
-            } catch (\Exception $ex) {
-                Tlog::getInstance()->error('Failed to acquire lock : '.$ex->getMessage());
-            }
-
-            try {
-                $invoiceRef = ConfigQuery::create()
-                    ->findOneByName('invoiceRef');
-
-                if (null === $invoiceRef) {
-                    throw new \RuntimeException('you must set an invoice ref in your admin panel');
-                }
-
-                $value = $invoiceRef->getValue();
-                $order->setInvoiceRef($value)
-                    ->save();
-
-                $invoiceRef
-                    ->setValue(++$value)
-                    ->save();
-            } finally {
-                // Always release lock !
-                $lock?->release();
-            }
-        }
+    public function __construct(
+        private NumberedStatuses $numberedStatuses,
+        private InvoiceRefSequence $sequence,
+        private LoggerInterface $logger,
+    ) {
     }
 
-    /**
-     * Returns an array of event names this subscriber wants to listen to.
-     *
-     * The array keys are event names and the value can be:
-     *
-     *  * The method name to call (priority defaults to 0)
-     *  * An array composed of the method name to call and the priority
-     *  * An array of arrays composed of the method names to call and respective
-     *    priorities, or 0 if unset
-     *
-     * For instance:
-     *
-     *  * array('eventName' => 'methodName')
-     *  * array('eventName' => array('methodName', $priority))
-     *  * array('eventName' => array(array('methodName1', $priority), array('methodName2'))
-     *
-     * @return array The event names to listen to
-     *
-     * @api
-     */
     public static function getSubscribedEvents(): array
     {
         return [
             TheliaEvents::ORDER_UPDATE_STATUS => ['implementInvoice', 100],
         ];
+    }
+
+    public function implementInvoice(OrderEvent $event): void
+    {
+        $order = $event->getOrder();
+
+        if (null !== $order->getInvoiceRef() && '' !== $order->getInvoiceRef()) {
+            return;
+        }
+
+        if (!$this->numberedStatuses->includes($order->getOrderStatus())) {
+            return;
+        }
+
+        try {
+            $this->sequence->assignTo($order);
+        } catch (\Throwable $exception) {
+            // Rethrowing would abort the listeners still due to run (coupon consumption, confirmation e-mails), fail
+            // the payment module's callback, and cancel the status change when the caller wraps it in a transaction.
+            // The order keeps no invoice number: `invoiceref:assign` gives it one once the cause is fixed.
+            $this->logger->error('InvoiceRef: failed to give order #{orderId} an invoice number: {message}', [
+                'orderId' => $order->getId(),
+                'message' => $exception->getMessage(),
+                'exception' => $exception,
+            ]);
+        }
     }
 }

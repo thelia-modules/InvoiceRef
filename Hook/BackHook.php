@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Thelia package.
  * http://www.thelia.net
@@ -13,11 +15,13 @@
 namespace InvoiceRef\Hook;
 
 use InvoiceRef\Form\ConfigurationForm;
+use InvoiceRef\InvoiceRef;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Thelia\Core\Event\Hook\HookRenderEvent;
 use Thelia\Core\Form\TheliaFormFactory;
 use Thelia\Core\Hook\BaseHook;
 use Thelia\Core\Template\Parser\ParserResolver;
+use Thelia\Model\ConfigQuery;
 
 class BackHook extends BaseHook
 {
@@ -32,9 +36,15 @@ class BackHook extends BaseHook
     public function onModuleConfiguration(HookRenderEvent $event): void
     {
         $form = $this->formFactory->createForm(ConfigurationForm::getName());
-        $event->add($this->render('InvoiceRef/module_configuration.html.twig', ['form' => $form->createView()->getView()]));
+        $event->add($this->render('InvoiceRef/module_configuration.html.twig', [
+            'form' => $form->createView()->getView(),
+            'core_numbering_enabled' => '1' === ConfigQuery::read(InvoiceRef::CORE_NUMBERING_CONFIG_NAME, '0'),
+        ]));
     }
 
+    /**
+     * @return array<string, list<array{type: string, method: string}>>
+     */
     public static function getSubscribedHooks(): array
     {
         return [

@@ -4,6 +4,12 @@
         <h5 class="card-title mb-0">{{ 'Invoice ref Configuration'|trans({}, 'invoiceref') }}</h5>
     </div>
     <div class="card-body">
+        {% if core_numbering_enabled|default(false) %}
+            <div class="alert alert-warning">
+                {{ 'The core invoice numbering (invoice_ref_auto) is on: orders would get numbers from two series. Set invoice_ref_auto to 0.'|trans({}, 'invoiceref') }}
+            </div>
+        {% endif %}
+
         <form action="{{ path('invoice_ref_configuration_configure') }}" method="post">
             <input type="hidden" name="{{ form.vars.full_name }}[_token]" value="{{ form._token.vars.value }}">
 
@@ -20,6 +26,19 @@
             </div>
 
             {% do form.invoice.setRendered %}
+
+            <fieldset class="mb-3">
+                <legend class="form-label fs-6">{{ form.statuses.vars.label }}</legend>
+                {% for status in form.statuses %}
+                    <div class="form-check">
+                        {{ form_widget(status, {attr: {class: 'form-check-input'}}) }}
+                        {{ form_label(status, null, {label_attr: {class: 'form-check-label'}}) }}
+                    </div>
+                {% endfor %}
+                {{ form_errors(form.statuses) }}
+            </fieldset>
+
+            {% do form.statuses.setRendered %}
 
             <div class="d-flex gap-2">
                 <button type="submit" name="save_mode" value="close" class="btn btn-primary">
