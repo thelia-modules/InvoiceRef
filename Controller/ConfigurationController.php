@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Thelia package.
  * http://www.thelia.net
@@ -13,6 +15,8 @@
 namespace InvoiceRef\Controller;
 
 use InvoiceRef\Form\ConfigurationForm;
+use InvoiceRef\Service\InvoiceRefSequence;
+use InvoiceRef\Service\NumberedStatuses;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -22,17 +26,11 @@ use Thelia\Core\Security\Resource\AdminResources;
 use Thelia\Form\Exception\FormValidationException;
 use Thelia\Model\ConfigQuery;
 
-/**
- * Class ConfigurationController
- *
- * @package InvoiceRef\Controller
- * @author  manuel raynaud <mraynaud@openstudio.fr>
- */
 #[Route('/admin/module/InvoiceRef', name: 'invoice_ref_configuration')]
 class ConfigurationController extends BaseAdminController
 {
     #[Route('/configure', name: '_configure', methods: ['POST'])]
-    public function configureAction(): RedirectResponse|Response|null
+    public function configureAction(NumberedStatuses $numberedStatuses): RedirectResponse|Response|null
     {
         if (null !== $response = $this->checkAuth(AdminResources::MODULE, 'invoiceref', AccessManager::UPDATE)) {
             return $response;
@@ -43,25 +41,36 @@ class ConfigurationController extends BaseAdminController
         try {
             $configForm = $this->validateForm($form);
 
-            ConfigQuery::write('invoiceRef', $configForm->get('invoice')->getData(), true, true);
+            ConfigQuery::write(InvoiceRefSequence::CONFIG_NAME, $configForm->get('invoice')->getData(), true, true);
+            $numberedStatuses->save(array_values($configForm->get('statuses')->getData()));
+
+            $this->adminLogAppend(
+                'invoiceref',
+                AccessManager::UPDATE,
+                \sprintf(
+                    'Invoice ref configuration: next number %s, numbered statuses %s',
+                    $configForm->get('invoice')->getData(),
+                    implode(', ', $numberedStatuses->codes()),
+                ),
+            );
 
             $request = $this->getRequest();
             $saveMode = $request->request->get('save_mode') ?? $request->query->get('save_mode');
 
-            if ($saveMode === 'stay') {
+            if ('stay' === $saveMode) {
                 return $this->generateRedirectFromRoute('admin.module.configure', [], ['module_code' => 'InvoiceRef']);
             }
 
             return $this->generateRedirectFromRoute('admin.module');
         } catch (FormValidationException $e) {
-            $error_msg = $this->createStandardFormValidationErrorMessage($e);
+            $errorMessage = $this->createStandardFormValidationErrorMessage($e);
         } catch (\Exception $e) {
-            $error_msg = $e->getMessage();
+            $errorMessage = $e->getMessage();
         }
 
         $this->setupFormErrorContext(
             'InvoiceRef Configuration',
-            $error_msg,
+            $errorMessage,
             $form,
             $e
         );
